@@ -16,6 +16,16 @@ const resetCanvas = (width, height) => {
 }
 
 resetCanvas()
+
+const touchToMouse = (touchEvent, mouseEvent ) => {
+  const [touch] = touchEvent.touches.length ?
+    touchEvent.touches : 
+    touchEvent.changedTouches 
+
+    return new MouseEvent(mouseEvent, {
+      clientX: touch.clientX
+    })
+}
 // interval(200)
 fromEvent(canvas, 'mousedown')
   .pipeThrough(map(e => {
