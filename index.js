@@ -4,6 +4,15 @@ const canvas = document.getElementById('canvas')
 const clearBtn = document.getElementById('clearBtn')
 const ctx = canvas.getContext('2d')
 
+const mouseEvents = {
+  down: 'mousedown',
+  move: 'mousemove',
+  up: 'mouseup',
+  leave: 'mouseleave',
+
+  // touches
+}
+
 const resetCanvas = (width, height) => {
   const parent = canvas.parentElement 
   canvas.width = width || parent.clientWidth * 0.9
@@ -28,9 +37,7 @@ const touchToMouse = (touchEvent, mouseEvent ) => {
 }
 // interval(200)
 fromEvent(canvas, 'mousedown')
-  .pipeThrough(map(e => {
-    return JSON.stringify(e, null, 2)
-  }))
+  .pipeThrough(map(e =>  touchToMouse())
   .pipeTo(new WritableStream({
     write(chunk){
       console.log('chunk', chunk)
