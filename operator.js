@@ -12,7 +12,7 @@ const fromEvent = (target, eventName) => {
       listener = (e) => controller.enqueue(e)
       target.addEventListener(eventName, listener)
     },
-    cancel(){
+    cancel() {
       target.removeEventListener(eventName, listener)
     }
   })
@@ -24,14 +24,14 @@ const fromEvent = (target, eventName) => {
  * @returns {ReadableStream}
  */
 const interval = ms => {
-  let intervalId 
+  let intervalId
   return new ReadableStream({
-    start(controller){
+    start(controller) {
       intervalId = setInterval(() => {
         controller.enqueue(Date.now())
       }, ms)
     },
-    cancel(){
+    cancel() {
       clearInterval(intervalId)
     }
   })
@@ -44,7 +44,7 @@ const interval = ms => {
  */
 const map = fn => {
   return new TransformStream({
-    transform(chunk, controller){
+    transform(chunk, controller) {
       controller.enqueue(fn(chunk))
     }
   })
@@ -58,14 +58,14 @@ const map = fn => {
 
 const merge = (streams) => {
   return new ReadableStream({
-    async start(controller){
-      for(const stream of streams){
+    async start(controller) {
+      for (const stream of streams) {
         const reader = (stream.readable || stream).getReader()
-        async function read(){
-          const {value, done} = await reader.read()
-          if(done)return 
+        async function read() {
+          const { value, done } = await reader.read()
+          if (done) return
           controller.enqueue(value)
-          
+
           return read()
         }
 
@@ -83,12 +83,29 @@ const merge = (streams) => {
  * @param {boolean} options.pairwise
  */
 
-const switchMap = (fn, options = {pairwise:true}) => {
+const switchMap = (fn, options = { pairwise: true }) => {
+  return TransformStream({
+    transform(chunk, controller) {
+      const stream = fn(chunk)
+      const reader = (stream.readable || stream).getReader()
+      async function read() {
 
+        const { value, done } = await reader.read()
+
+        if (done) return
+        const result = options.pairwise ? [chunk, value] : value
+        controller.enqueue(result)
+
+        return read()
+      }
+      return read()
+    }
+  })
 }
 export {
   fromEvent,
   interval,
   map,
-  merge
+  merge,
+  switchMap
 }

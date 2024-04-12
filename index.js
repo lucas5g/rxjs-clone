@@ -54,6 +54,16 @@ merge([
   fromEvent(canvas, mouseEvents.touchstart)
     .pipeThrough(map(e => touchToMouse(e, mouseEvents.touchstart)))
 ])
+  .pipeThrough(
+    switchMap(e => {
+      return merge([
+        fromEvent(canvas, mouseEvents.move),
+        fromEvent(canvas, mouseEvents.touchmove)
+          .pipeThrough(map(e => touchToMouse(e, mouseEvents.move)))
+      ])
+    })
+  )
+  
   .pipeTo(new WritableStream({
     write(mouseDown) {
       const position = getMousePosition(canvas, mouseDown)
