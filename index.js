@@ -10,7 +10,19 @@ const mouseEvents = {
   up: 'mouseup',
   leave: 'mouseleave',
 
-  // touches
+  touchstart: 'touchstart',
+  touchmove: 'touchmove',
+  touchend: 'touchend',
+
+  click: 'click'
+}
+
+const getMousePosition = (canvasDom, eventValue) => {
+  const rect = canvasDom.getBoundingClientRect()
+  return {
+    x: eventValue.clientX - rect.left,
+    y: eventValue.clientY - rect.top
+  }
 }
 
 const resetCanvas = (width, height) => {
@@ -32,14 +44,19 @@ const touchToMouse = (touchEvent, mouseEvent ) => {
     touchEvent.changedTouches 
 
     return new MouseEvent(mouseEvent, {
-      clientX: touch.clientX
+      clientX: touch.clientX,
+      clientY: touch.clientY
     })
 }
 // interval(200)
-fromEvent(canvas, 'mousedown')
-  .pipeThrough(map(e =>  touchToMouse())
+fromEvent(canvas, mouseEvents.touchstart)
+  .pipeThrough(map(e =>  touchToMouse(e, mouseEvents.touchstart)))
   .pipeTo(new WritableStream({
-    write(chunk){
-      console.log('chunk', chunk)
+    write(mouseDown){
+      const position = getMousePosition(canvas, mouseDown)
+
+      ctx.moveTo(0, 0)
+      ctx.lineTo(position.x, position.y)
+      ctx.stroke()
     }
   }))

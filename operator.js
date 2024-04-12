@@ -1,5 +1,6 @@
 
 /**
+ * 
  * @param {EventTarget} target
  * @param {string} eventName 
  * @returns {ReadableStream}
@@ -48,6 +49,17 @@ const map = fn => {
     }
   })
 }
+
+/**
+ * @typedef {ReadableStream | TransformStream} Stream
+ * @param {Stream[]} streams 
+ * @returns {ReadableStream}
+ */
+
+const race = (streams) => {
+
+}
+
 
 export {
   fromEvent,
