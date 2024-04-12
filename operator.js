@@ -56,13 +56,39 @@ const map = fn => {
  * @returns {ReadableStream}
  */
 
-const race = (streams) => {
+const merge = (streams) => {
+  return new ReadableStream({
+    async start(controller){
+      for(const stream of streams){
+        const reader = (stream.readable || stream).getReader()
+        async function read(){
+          const {value, done} = await reader.read()
+          if(done)return 
+          controller.enqueue(value)
+          
+          return read()
+        }
 
+        return read()
+      }
+    }
+  })
 }
 
+/**
+ * @typedef {function(): ReadableStream | TransformStream} StreamFunction
+ * 
+ * @param {StreamFunction} fn 
+ * @param {object} options
+ * @param {boolean} options.pairwise
+ */
 
+const switchMap = (fn, options = {pairwise:true}) => {
+
+}
 export {
   fromEvent,
   interval,
-  map
+  map,
+  merge
 }

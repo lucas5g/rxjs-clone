@@ -1,4 +1,4 @@
-import { fromEvent, interval, map } from "./operator.js"
+import { fromEvent, interval, map, merge } from "./operator.js"
 
 const canvas = document.getElementById('canvas')
 const clearBtn = document.getElementById('clearBtn')
@@ -26,7 +26,7 @@ const getMousePosition = (canvasDom, eventValue) => {
 }
 
 const resetCanvas = (width, height) => {
-  const parent = canvas.parentElement 
+  const parent = canvas.parentElement
   canvas.width = width || parent.clientWidth * 0.9
   canvas.height = height || parent.clientHeight * 1.5
 
@@ -38,21 +38,24 @@ const resetCanvas = (width, height) => {
 
 resetCanvas()
 
-const touchToMouse = (touchEvent, mouseEvent ) => {
+const touchToMouse = (touchEvent, mouseEvent) => {
   const [touch] = touchEvent.touches.length ?
-    touchEvent.touches : 
-    touchEvent.changedTouches 
+    touchEvent.touches :
+    touchEvent.changedTouches
 
-    return new MouseEvent(mouseEvent, {
-      clientX: touch.clientX,
-      clientY: touch.clientY
-    })
+  return new MouseEvent(mouseEvent, {
+    clientX: touch.clientX,
+    clientY: touch.clientY
+  })
 }
-// interval(200)
-fromEvent(canvas, mouseEvents.touchstart)
-  .pipeThrough(map(e =>  touchToMouse(e, mouseEvents.touchstart)))
+
+merge([
+  fromEvent(canvas, mouseEvents.down),
+  fromEvent(canvas, mouseEvents.touchstart)
+    .pipeThrough(map(e => touchToMouse(e, mouseEvents.touchstart)))
+])
   .pipeTo(new WritableStream({
-    write(mouseDown){
+    write(mouseDown) {
       const position = getMousePosition(canvas, mouseDown)
 
       ctx.moveTo(0, 0)
