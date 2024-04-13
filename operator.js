@@ -64,12 +64,14 @@ const merge = (streams) => {
         async function read() {
           const { value, done } = await reader.read()
           if (done) return
+
+          if(!controller.desiredSize)return
           controller.enqueue(value)
 
           return read()
         }
 
-        return read()
+        read()
       }
     }
   })
@@ -84,9 +86,9 @@ const merge = (streams) => {
  */
 
 const switchMap = (fn, options = { pairwise: true }) => {
-  return TransformStream({
+  return new TransformStream({
     transform(chunk, controller) {
-      const stream = fn(chunk)
+      const stream = fn.bind(fn)(chunk)
       const reader = (stream.readable || stream).getReader()
       async function read() {
 
@@ -102,10 +104,33 @@ const switchMap = (fn, options = { pairwise: true }) => {
     }
   })
 }
+
+/**
+ * @param {ReadebleStream | TransformStream} stream
+ */
+const takeUtil = stream => {
+  const readAndTerminate = async(stream, controller) => {
+    const reader = (stream.readable || stream).getReader()
+    const { value } = await reader.read() 
+    controller.enqueue(value)
+    controller.terminate()
+  }
+
+  return new TransformStream({
+    start(controller){
+      readAndTerminate(stream, controller)
+    },
+    transform(chunk, controller){
+      controller.enqueue(chunk)
+    }
+  })
+}
+
 export {
   fromEvent,
   interval,
   map,
   merge,
-  switchMap
+  switchMap,
+  takeUtil
 }
