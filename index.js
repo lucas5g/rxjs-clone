@@ -75,34 +75,35 @@ merge([
         fromEvent(canvas, mouseEvents.touchmove)
           .pipeThrough(map(e => touchToMouse(e, mouseEvents.move)))
       ])
-    }).pipeThrough(
-      takeUtil(
-        merge([
-          fromEvent(canvas, mouseEvents.up),
-          fromEvent(canvas, mouseEvents.leave),
-          fromEvent(canvas, mouseEvents.touchend)
-            .pipeThrough(map(e => touchToMouse(e, mouseEvents.up)))
-        ])
-      )
-    )
+        .pipeThrough(
+          takeUtil(
+            merge([
+              fromEvent(canvas, mouseEvents.up),
+              fromEvent(canvas, mouseEvents.leave),
+              fromEvent(canvas, mouseEvents.touchend)
+                .pipeThrough(map(e => touchToMouse(e, mouseEvents.up)))
+            ])
+          )
+        )
+    })
   )
-  .pipeThrough(map(function ([mouseDown, mouseMove]) {
-    this._lastPosition = this._lastPosition ?? mouseDown
+  .pipeThrough(
+    map(function ([mouseDown, mouseMove]) {
+      this._lastPosition = this._lastPosition ?? mouseDown
 
-    const [from, to] = [this._lastPosition, mouseMove]
-      .map(item => getMousePosition(canvas, item))
+      const [from, to] = [this._lastPosition, mouseMove]
+        .map(item => getMousePosition(canvas, item))
 
-    this._lastPosition = mouseMove.type === mouseEvents.up ?
-      null :
-      mouseMove
+      this._lastPosition = mouseMove.type === mouseEvents.up ?
+        null :
+        mouseMove
 
-    return { from, to }
+      return { from, to }
 
-  }))
+    }))
   .pipeTo(new WritableStream({
     write({ from, to }) {
-      const position = getMousePosition(canvas, mouseDown)
-
+      store.set({ from, to })
       ctx.moveTo(from.x, from.y)
       ctx.lineTo(to.x, to.y)
       ctx.stroke()
@@ -122,7 +123,7 @@ fromEvent(clearBtn, mouseEvents.click)
 
         await sleep(5)
       }
-      store.clear() 
+      store.clear()
       resetCanvas(canvas.width, canvas.height)
 
     }
