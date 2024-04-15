@@ -37,16 +37,18 @@ const resetCanvas = (width, height) => {
 }
 resetCanvas()
 
+const sleep = ms => new Promise(r => setTimeout(r, ms))
+
 
 const store = {
-  db:[],
-  get(){
+  db: [],
+  get() {
     return this.db
   },
-  set(item){
+  set(item) {
     this.db.unshift(item)
   },
-  clear(){
+  clear() {
     this.db.length = 0
   }
 }
@@ -104,5 +106,24 @@ merge([
       ctx.moveTo(from.x, from.y)
       ctx.lineTo(to.x, to.y)
       ctx.stroke()
+    }
+  }))
+
+fromEvent(clearBtn, mouseEvents.click)
+  .pipeTo(new WritableStream({
+    async write(chunk) {
+      ctx.beginPath()
+      ctx.strokeStyle = 'white'
+
+      for (const { from, to } of store.get()) {
+        ctx.moveTo(from.x, from.y)
+        ctx.lineTo(to.x, to.y)
+        ctx.stroke()
+
+        await sleep(5)
+      }
+      store.clear() 
+      resetCanvas(canvas.width, canvas.height)
+
     }
   }))
