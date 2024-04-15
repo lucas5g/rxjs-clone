@@ -45,7 +45,7 @@ const interval = ms => {
 const map = fn => {
   return new TransformStream({
     transform(chunk, controller) {
-      controller.enqueue(fn(chunk))
+      controller.enqueue(fn.bind(fn)(chunk))
     }
   })
 }
@@ -89,6 +89,7 @@ const switchMap = (fn, options = { pairwise: true }) => {
   return new TransformStream({
     transform(chunk, controller) {
       const stream = fn.bind(fn)(chunk)
+      
       const reader = (stream.readable || stream).getReader()
       async function read() {
 
